@@ -52,7 +52,7 @@ def _validate_token(auth_header):
 def authorize_lcoe_users(request):
     """
     :param request: Flask request object
-    :return: Modified request object (change is also in-place)
+    :return: Errors
     """
     if request.path == '/version.json':
         logging.info('Version requested, skipping auth check')
@@ -72,11 +72,9 @@ def authorize_lcoe_users(request):
             roles = decoded_token.get('roles')
             request.lcoe_roles = roles
 
-            for role in roles:
-                if role in ['admin', 'user']:
-                    return request
+            if roles is None:
+                return 'User does not have the required role to access the service', 403
 
-            return 'User does not have the required role to access the service', 403
         except Exception as e:
             logging.error(traceback.format_exc())
             return str(e), 401
