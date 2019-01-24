@@ -1,4 +1,5 @@
 import traceback
+from typing import Dict
 
 import jwt
 import os
@@ -14,15 +15,21 @@ if 'GUI_AD_APP_ID' in os.environ:
 # url to updated keys for verifying tokens
 _azure_key_url = 'https://login.microsoftonline.com/common/discovery/v2.0/keys'
 
+key_cache = {}
+
 
 # Looks up the correct key to verify token from token header kid
 def _get_azure_key(kid):
-    keys = requests.get(_azure_key_url).json()['keys']
-    for key in keys:
-        if key['kid'] == kid:
-            return key['x5c'][0]
-
-    raise LookupError('The key list in azure contains no key with kid: ' + kid)
+    if kid not in key_cache:
+        keys = requests.get(_azure_key_url).json()['keys']
+        for key in keys:
+            key_cache[key['kid']] = key
+            if key['kid'] == kid:
+                return key['x5c'][0]
+    if kid not in key_cache:
+        raise LookupError('The key list in azure contains no key with kid: ' + kid)
+    key = key_cache[kid]
+    return key['x5c'][0]
 
 
 def _validate_token(auth_header):
@@ -76,14 +83,16 @@ def authorize_lcoe_users(request):
 
 
 if __name__ == '__main__':
-    _id_token = 'JWT insert tokenci'
+    _id_token = 'Bearer <paste your jwt here>'
 
     class Request:
-        pass
+        path: str
+        headers: Dict[str, str]
+        method: str
 
-    request = Request()
-    request.path = ''
-    request.headers = {'Authorization': _id_token}
-    request.method = ''
-    request_after = authorize_lcoe_users(request)
+    req = Request()
+    req.path = ''
+    req.headers = {'Authorization': _id_token}
+    req.method = ''
+    request_after = authorize_lcoe_users(req)
     print(request_after)
