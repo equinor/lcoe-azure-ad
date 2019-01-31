@@ -56,7 +56,7 @@ def authorize_lcoe_users(request):
     """
     if request.path == '/version.json':
         logging.info('Version requested, skipping auth check')
-        return request
+        return None
     # logging.info(request.method + ': request.json: ' + str(request.json))
     if request.method != 'OPTIONS':
         try:
