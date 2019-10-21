@@ -8,4 +8,4 @@ pycparser==2.19
 PyJWT==1.6.4
 requests==2.21.0
 six==1.11.0
-urllib3==1.23
+urllib3==1.24.2
